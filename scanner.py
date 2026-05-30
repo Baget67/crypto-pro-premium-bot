@@ -1,217 +1,3 @@
-# =====================================
-# scanner.py
-# Crypto Pro Premium Bot V2
-# =====================================
-
-import aiohttp
-import asyncio
-
-from scoring import (
-    score_long,
-    score_short
-)
-
-from history import (
-    add_snapshot,
-    get_changes
-)
-
-from config import (
-    MIN_VOLUME_24H,
-    MIN_OPEN_INTEREST,
-    TOP_LONGS,
-    TOP_SHORTS
-)
-
-# =====================================
-# BYBIT API
-# =====================================
-
-BYBIT_BASE = "https://api.bybit.com"
-
-
-# =====================================
-# HTTP
-# =====================================
-
-async def fetch_json(
-    session,
-    url
-):
-    try:
-
-        async with session.get(
-            url,
-            timeout=15
-        ) as response:
-
-            if response.status != 200:
-                return None
-
-            return await response.json()
-
-    except Exception:
-        return None
-
-
-# =====================================
-# TICKERS
-# =====================================
-
-async def fetch_tickers(
-    session
-):
-    url = (
-        f"{BYBIT_BASE}"
-        "/v5/market/tickers"
-        "?category=linear"
-    )
-
-    data = await fetch_json(
-        session,
-        url
-    )
-
-    if not data:
-        return []
-
-    return (
-        data
-        .get("result", {})
-        .get("list", [])
-    )
-
-
-# =====================================
-# FUNDING
-# =====================================
-
-async def fetch_funding(
-    session,
-    symbol
-):
-    url = (
-        f"{BYBIT_BASE}"
-        "/v5/market/funding/history"
-        f"?category=linear"
-        f"&symbol={symbol}"
-        "&limit=1"
-    )
-
-    data = await fetch_json(
-        session,
-        url
-    )
-
-    if not data:
-        return 0
-
-    rows = (
-        data
-        .get("result", {})
-        .get("list", [])
-    )
-
-    if not rows:
-        return 0
-
-    try:
-        return float(
-            rows[0]["fundingRate"]
-        )
-    except:
-        return 0
-
-
-# =====================================
-# OPEN INTEREST
-# =====================================
-
-async def fetch_open_interest(
-    session,
-    symbol
-):
-    url = (
-        f"{BYBIT_BASE}"
-        "/v5/market/open-interest"
-        f"?category=linear"
-        f"&symbol={symbol}"
-        "&intervalTime=5min"
-    )
-
-    data = await fetch_json(
-        session,
-        url
-    )
-
-    if not data:
-        return 0
-
-    rows = (
-        data
-        .get("result", {})
-        .get("list", [])
-    )
-
-    if not rows:
-        return 0
-
-    try:
-        return float(
-            rows[0]["openInterest"]
-        )
-    except:
-        return 0
-# =====================================
-# TREND SCORE
-# =====================================
-
-def calculate_trend_score(
-    price_15m,
-    price_1h,
-    price_4h
-):
-    score = 0
-
-    if price_15m > 0:
-        score += 3
-
-    if price_1h > 0:
-        score += 3
-
-    if price_4h > 0:
-        score += 4
-
-    return min(score, 10)
-
-
-# =====================================
-# BREAKDOWN SCORE
-# =====================================
-
-def calculate_breakdown_score(
-    price_15m,
-    price_1h,
-    price_4h
-):
-    score = 0
-
-    if price_15m < 0:
-        score += 8
-
-    if price_1h < 0:
-        score += 8
-
-    if price_4h < 0:
-        score += 9
-
-    return min(score, 25)
-
-
-# =====================================
-# MAIN SCANNER
-# =====================================
-
 async def scan_market(
     history
 ):
@@ -225,11 +11,25 @@ async def scan_market(
             session
         )
 
+        print(
+            f"TICKERS RECEIVED: {len(tickers)}"
+        )
+
         for ticker in tickers:
 
             try:
 
                 symbol = ticker["symbol"]
+
+                if symbol in [
+                    "BTCUSDT",
+                    "ETHUSDT",
+                    "SOLUSDT"
+                ]:
+
+                    print(
+                        f"CHECKING {symbol}"
+                    )
 
                 volume_24h = float(
                     ticker.get(
@@ -258,6 +58,19 @@ async def scan_market(
                     symbol
                 )
 
+                if symbol in [
+                    "BTCUSDT",
+                    "ETHUSDT",
+                    "SOLUSDT"
+                ]:
+
+                    print(
+                        f"{symbol} "
+                        f"VOL={volume_24h} "
+                        f"OI={oi} "
+                        f"FUNDING={funding}"
+                    )
+
                 if oi < MIN_OPEN_INTEREST:
                     continue
 
@@ -275,8 +88,20 @@ async def scan_market(
                     symbol
                 )
 
+                # ==========================
+                # FIRST RUN / NO HISTORY
+                # ==========================
+
                 if not changes:
-                    continue
+
+                    changes = {
+                        "oi_1h": 0,
+                        "oi_4h": 0,
+                        "volume_1h": 0,
+                        "price_15m": 0,
+                        "price_1h": 0,
+                        "price_4h": 0
+                    }
 
                 oi_1h = changes.get(
                     "oi_1h",
@@ -368,7 +193,12 @@ async def scan_market(
                     "reasons": short_reasons
                 })
 
-            except Exception:
+            except Exception as e:
+
+                print(
+                    f"ERROR {symbol}: {e}"
+                )
+
                 continue
 
     longs = sorted(
@@ -382,5 +212,13 @@ async def scan_market(
         key=lambda x: x["score"],
         reverse=True
     )[:TOP_SHORTS]
+
+    print(
+        f"FINAL LONGS: {len(longs)}"
+    )
+
+    print(
+        f"FINAL SHORTS: {len(shorts)}"
+    )
 
     return longs, shorts
