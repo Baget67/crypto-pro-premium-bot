@@ -7,9 +7,7 @@ async def scan_market(
 
     async with aiohttp.ClientSession() as session:
 
-        tickers = await fetch_tickers(
-            session
-        )
+        tickers = await fetch_tickers(session)
 
         print(
             f"TICKERS RECEIVED: {len(tickers)}"
@@ -88,10 +86,6 @@ async def scan_market(
                     symbol
                 )
 
-                # ==========================
-                # FIRST RUN / NO HISTORY
-                # ==========================
-
                 if not changes:
 
                     changes = {
@@ -103,15 +97,8 @@ async def scan_market(
                         "price_4h": 0
                     }
 
-                oi_1h = changes.get(
-                    "oi_1h",
-                    0
-                )
-
-                oi_4h = changes.get(
-                    "oi_4h",
-                    0
-                )
+                oi_1h = changes.get("oi_1h", 0)
+                oi_4h = changes.get("oi_4h", 0)
 
                 volume_change = changes.get(
                     "volume_1h",
