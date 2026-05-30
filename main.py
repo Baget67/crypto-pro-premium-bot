@@ -1,24 +1,15 @@
 # =====================================
 # main.py
-# Crypto Pro Premium Bot V2
+# DEBUG VERSION
 # =====================================
 
 import os
 import discord
 
-from discord.ext import (
-    commands,
-    tasks
-)
+from discord.ext import commands, tasks
 
-from history import (
-    load_history,
-    save_history
-)
-
-from scanner import (
-    scan_market
-)
+from history import load_history, save_history
+from scanner import scan_market
 
 from config import (
     SCAN_INTERVAL_MINUTES,
@@ -26,13 +17,7 @@ from config import (
     SHORT_ALERT_SCORE
 )
 
-# =====================================
-# ENV
-# =====================================
-
-BOT_TOKEN = os.getenv(
-    "DISCORD_BOT_TOKEN"
-)
+BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 CHANNEL_ID = int(
     os.getenv(
@@ -40,10 +25,6 @@ CHANNEL_ID = int(
         "0"
     )
 )
-
-# =====================================
-# DISCORD
-# =====================================
 
 intents = discord.Intents.default()
 
@@ -54,18 +35,9 @@ bot = commands.Bot(
 
 history = load_history()
 
-# cooldown cache
 
-last_alerts = {}
+def build_long_embed(coin):
 
-
-# =====================================
-# EMBEDS
-# =====================================
-
-def build_long_embed(
-    coin
-):
     embed = discord.Embed(
         title=f"🚀 LONG ALERT - {coin['symbol']}",
         color=0x00ff00
@@ -73,9 +45,7 @@ def build_long_embed(
 
     embed.add_field(
         name="Score",
-        value=str(
-            coin["score"]
-        )
+        value=str(coin["score"])
     )
 
     embed.add_field(
@@ -93,25 +63,11 @@ def build_long_embed(
         value=f"{coin['volume_change']:.2f}%"
     )
 
-    embed.add_field(
-        name="Funding",
-        value=f"{coin['funding']:.5f}"
-    )
-
-    embed.add_field(
-        name="Reasons",
-        value="\n".join(
-            coin["reasons"]
-        )[:1000],
-        inline=False
-    )
-
     return embed
 
 
-def build_short_embed(
-    coin
-):
+def build_short_embed(coin):
+
     embed = discord.Embed(
         title=f"🔻 SHORT ALERT - {coin['symbol']}",
         color=0xff0000
@@ -119,9 +75,7 @@ def build_short_embed(
 
     embed.add_field(
         name="Score",
-        value=str(
-            coin["score"]
-        )
+        value=str(coin["score"])
     )
 
     embed.add_field(
@@ -139,129 +93,122 @@ def build_short_embed(
         value=f"{coin['volume_change']:.2f}%"
     )
 
-    embed.add_field(
-        name="Funding",
-        value=f"{coin['funding']:.5f}"
-    )
-
-    embed.add_field(
-        name="Reasons",
-        value="\n".join(
-            coin["reasons"]
-        )[:1000],
-        inline=False
-    )
-
     return embed
 
-
-# =====================================
-# COMMANDS
-# =====================================
-
-@bot.command()
-async def scan(ctx):
-
-    longs, shorts = await scan_market(
-        history
-    )
-
-    await ctx.send(
-        f"Found {len(longs)} longs "
-        f"and {len(shorts)} shorts"
-    )
-
-
-@bot.command()
-async def top(ctx):
-
-    longs, shorts = await scan_market(
-        history
-    )
-
-    for coin in longs:
-        await ctx.send(
-            embed=build_long_embed(
-                coin
-            )
-        )
-
-    for coin in shorts:
-        await ctx.send(
-            embed=build_short_embed(
-                coin
-            )
-        )
-
-
-# =====================================
-# AUTO LOOP
-# =====================================
 
 @tasks.loop(
     minutes=SCAN_INTERVAL_MINUTES
 )
 async def market_loop():
 
-    channel = bot.get_channel(
-        CHANNEL_ID
-    )
+    print("=" * 50)
+    print("MARKET LOOP STARTED")
+    print("=" * 50)
 
-    if channel is None:
-        return
+    try:
 
-    longs, shorts = await scan_market(
-        history
-    )
+        channel = bot.get_channel(
+            CHANNEL_ID
+        )
 
-    for coin in longs:
+        if channel is None:
 
-        if (
-            coin["score"]
-            >= LONG_ALERT_SCORE
-        ):
-            await channel.send(
-                embed=build_long_embed(
-                    coin
-                )
+            print(
+                f"ERROR: Channel not found: {CHANNEL_ID}"
             )
 
-    for coin in shorts:
+            return
 
-        if (
-            coin["score"]
-            >= SHORT_ALERT_SCORE
-        ):
-            await channel.send(
-                embed=build_short_embed(
-                    coin
-                )
+        print(
+            f"Channel found: {channel.name}"
+        )
+
+        longs, shorts = await scan_market(
+            history
+        )
+
+        print(
+            f"Longs found: {len(longs)}"
+        )
+
+        print(
+            f"Shorts found: {len(shorts)}"
+        )
+
+        for coin in longs:
+
+            print(
+                f"LONG {coin['symbol']} "
+                f"score={coin['score']}"
             )
 
-    save_history(
-        history
-    )
+            if coin["score"] >= LONG_ALERT_SCORE:
 
+                await channel.send(
+                    embed=build_long_embed(
+                        coin
+                    )
+                )
 
-# =====================================
-# READY
-# =====================================
+                print(
+                    f"SENT LONG: "
+                    f"{coin['symbol']}"
+                )
+
+        for coin in shorts:
+
+            print(
+                f"SHORT {coin['symbol']} "
+                f"score={coin['score']}"
+            )
+
+            if coin["score"] >= SHORT_ALERT_SCORE:
+
+                await channel.send(
+                    embed=build_short_embed(
+                        coin
+                    )
+                )
+
+                print(
+                    f"SENT SHORT: "
+                    f"{coin['symbol']}"
+                )
+
+        save_history(
+            history
+        )
+
+        print(
+            "History saved"
+        )
+
+    except Exception as e:
+
+        print(
+            f"MARKET LOOP ERROR: {e}"
+        )
+
 
 @bot.event
 async def on_ready():
 
     print(
-        f"Logged in as "
-        f"{bot.user}"
+        f"Logged in as {bot.user}"
+    )
+
+    print(
+        "Starting market loop..."
     )
 
     if not market_loop.is_running():
+
         market_loop.start()
 
+        print(
+            "Market loop started"
+        )
 
-# =====================================
-# START
-# =====================================
 
 bot.run(
     BOT_TOKEN
