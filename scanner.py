@@ -76,9 +76,8 @@ async def fetch_tickers(
     session
 ):
     url = (
-        f"{BYBIT_BASE}"
-        "/v5/market/tickers"
-        "?category=linear"
+        f"{BINANCE_BASE}"
+        "/fapi/v1/ticker/24hr"
     )
 
     data = await fetch_json(
@@ -89,12 +88,7 @@ async def fetch_tickers(
     if not data:
         return []
 
-    return (
-        data
-        .get("result", {})
-        .get("list", [])
-    )
-
+    return data
 
 # =====================================
 # FUNDING
