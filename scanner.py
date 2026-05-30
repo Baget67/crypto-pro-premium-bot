@@ -225,6 +225,14 @@ async def scan_market(
             session
         )
 
+        print(f"TICKERS RECEIVED: {len(tickers)}")
+
+        for t in tickers[:10]:
+            print(
+                f"{t.get('symbol')} | "
+                f"VOL={t.get('turnover24h')}"
+            )
+
         for ticker in tickers:
 
             try:
@@ -276,7 +284,15 @@ async def scan_market(
                 )
 
                 if not changes:
-                    continue
+
+                    changes = {
+                        "oi_1h": 0,
+                        "oi_4h": 0,
+                        "volume_1h": 0,
+                        "price_15m": 0,
+                        "price_1h": 0,
+                        "price_4h": 0
+                    }
 
                 oi_1h = changes.get(
                     "oi_1h",
@@ -368,7 +384,12 @@ async def scan_market(
                     "reasons": short_reasons
                 })
 
-            except Exception:
+            except Exception as e:
+
+                print(
+                    f"ERROR {symbol}: {e}"
+                )
+
                 continue
 
     longs = sorted(
@@ -382,5 +403,13 @@ async def scan_market(
         key=lambda x: x["score"],
         reverse=True
     )[:TOP_SHORTS]
+
+    print(
+        f"FINAL LONGS: {len(longs)}"
+    )
+
+    print(
+        f"FINAL SHORTS: {len(shorts)}"
+    )
 
     return longs, shorts
