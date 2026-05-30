@@ -1,3 +1,26 @@
+# =====================================
+# scanner.py
+# =====================================
+
+import aiohttp
+import asyncio
+
+from scoring import (
+    score_long,
+    score_short
+)
+
+from history import (
+    add_snapshot,
+    get_changes
+)
+
+from config import (
+    MIN_VOLUME_24H,
+    MIN_OPEN_INTEREST,
+    TOP_LONGS,
+    TOP_SHORTS
+)
 async def scan_market(
     history
 ):
