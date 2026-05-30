@@ -212,29 +212,23 @@ def calculate_breakdown_score(
 # MAIN SCANNER
 # =====================================
 
-async def scan_market(
-    history
-):
+async with aiohttp.ClientSession() as session:
 
-    longs = []
-    shorts = []
-
-    async with aiohttp.ClientSession() as session:
-
-        tickers = await fetch_tickers(
-            session
-        )
-        print(f"TICKERS RECEIVED: {len(tickers)}")
-
-        for t in tickers[:10]:
-        print(
-        f"{t.get('symbol')} | "
-        f"VOL={t.get('turnover24h')}"
-        )
-
-        for ticker in tickers:
-
-            try:
+                tickers = await fetch_tickers(
+                    session
+                )
+            
+                print(f"TICKERS RECEIVED: {len(tickers)}")
+            
+                for t in tickers[:10]:
+                    print(
+                        f"{t.get('symbol')} | "
+                        f"VOL={t.get('turnover24h')}"
+                    )
+            
+                for ticker in tickers:
+                    ...
+                try:
 
                 symbol = ticker["symbol"]
 
