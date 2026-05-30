@@ -1,5 +1,6 @@
 # =====================================
 # scanner.py
+# Crypto Pro Premium Bot V2
 # =====================================
 
 import aiohttp
@@ -21,214 +22,143 @@ from config import (
     TOP_LONGS,
     TOP_SHORTS
 )
-async def scan_market(
-    history
+
+# =====================================
+# BYBIT API
+# =====================================
+
+BYBIT_BASE = "https://api.bybit.com"
+
+
+# =====================================
+# HTTP
+# =====================================
+
+async def fetch_json(
+    session,
+    url
 ):
+    try:
 
-    longs = []
-    shorts = []
+        async with session.get(
+            url,
+            timeout=15
+        ) as response:
 
-    async with aiohttp.ClientSession() as session:
+            if response.status != 200:
+                return None
 
-        tickers = await fetch_tickers(session)
+            return await response.json()
 
-        print(
-            f"TICKERS RECEIVED: {len(tickers)}"
+    except Exception:
+        return None
+
+
+# =====================================
+# TICKERS
+# =====================================
+
+async def fetch_tickers(
+    session
+):
+    url = (
+        f"{BYBIT_BASE}"
+        "/v5/market/tickers"
+        "?category=linear"
+    )
+
+    data = await fetch_json(
+        session,
+        url
+    )
+
+    if not data:
+        return []
+
+    return (
+        data
+        .get("result", {})
+        .get("list", [])
+    )
+
+
+# =====================================
+# FUNDING
+# =====================================
+
+async def fetch_funding(
+    session,
+    symbol
+):
+    url = (
+        f"{BYBIT_BASE}"
+        "/v5/market/funding/history"
+        f"?category=linear"
+        f"&symbol={symbol}"
+        "&limit=1"
+    )
+
+    data = await fetch_json(
+        session,
+        url
+    )
+
+    if not data:
+        return 0
+
+    rows = (
+        data
+        .get("result", {})
+        .get("list", [])
+    )
+
+    if not rows:
+        return 0
+
+    try:
+        return float(
+            rows[0]["fundingRate"]
         )
+    except:
+        return 0
 
-        for ticker in tickers:
 
-            try:
+# =====================================
+# OPEN INTEREST
+# =====================================
 
-                symbol = ticker["symbol"]
-
-                if symbol in [
-                    "BTCUSDT",
-                    "ETHUSDT",
-                    "SOLUSDT"
-                ]:
-
-                    print(
-                        f"CHECKING {symbol}"
-                    )
-
-                volume_24h = float(
-                    ticker.get(
-                        "turnover24h",
-                        0
-                    )
-                )
-
-                price = float(
-                    ticker.get(
-                        "lastPrice",
-                        0
-                    )
-                )
-
-                if volume_24h < MIN_VOLUME_24H:
-                    continue
-
-                funding = await fetch_funding(
-                    session,
-                    symbol
-                )
-
-                oi = await fetch_open_interest(
-                    session,
-                    symbol
-                )
-
-                if symbol in [
-                    "BTCUSDT",
-                    "ETHUSDT",
-                    "SOLUSDT"
-                ]:
-
-                    print(
-                        f"{symbol} "
-                        f"VOL={volume_24h} "
-                        f"OI={oi} "
-                        f"FUNDING={funding}"
-                    )
-
-                if oi < MIN_OPEN_INTEREST:
-                    continue
-
-                add_snapshot(
-                    history,
-                    symbol,
-                    oi,
-                    volume_24h,
-                    price,
-                    funding
-                )
-
-                changes = get_changes(
-                    history,
-                    symbol
-                )
-
-                if not changes:
-
-                    changes = {
-                        "oi_1h": 0,
-                        "oi_4h": 0,
-                        "volume_1h": 0,
-                        "price_15m": 0,
-                        "price_1h": 0,
-                        "price_4h": 0
-                    }
-
-                oi_1h = changes.get("oi_1h", 0)
-                oi_4h = changes.get("oi_4h", 0)
-
-                volume_change = changes.get(
-                    "volume_1h",
-                    0
-                )
-
-                price_15m = changes.get(
-                    "price_15m",
-                    0
-                )
-
-                price_1h = changes.get(
-                    "price_1h",
-                    0
-                )
-
-                price_4h = changes.get(
-                    "price_4h",
-                    0
-                )
-
-                trend_score = (
-                    calculate_trend_score(
-                        price_15m,
-                        price_1h,
-                        price_4h
-                    )
-                )
-
-                breakdown_score = (
-                    calculate_breakdown_score(
-                        price_15m,
-                        price_1h,
-                        price_4h
-                    )
-                )
-
-                long_score, long_reasons = (
-                    score_long(
-                        oi_1h,
-                        oi_4h,
-                        volume_change,
-                        price_1h,
-                        funding,
-                        trend_score
-                    )
-                )
-
-                short_score, short_reasons = (
-                    score_short(
-                        oi_1h,
-                        oi_4h,
-                        volume_change,
-                        price_1h,
-                        funding,
-                        breakdown_score
-                    )
-                )
-
-                longs.append({
-                    "symbol": symbol,
-                    "score": long_score,
-                    "price": price,
-                    "funding": funding,
-                    "oi_1h": oi_1h,
-                    "oi_4h": oi_4h,
-                    "volume_change": volume_change,
-                    "reasons": long_reasons
-                })
-
-                shorts.append({
-                    "symbol": symbol,
-                    "score": short_score,
-                    "price": price,
-                    "funding": funding,
-                    "oi_1h": oi_1h,
-                    "oi_4h": oi_4h,
-                    "volume_change": volume_change,
-                    "reasons": short_reasons
-                })
-
-            except Exception as e:
-
-                print(
-                    f"ERROR {symbol}: {e}"
-                )
-
-                continue
-
-    longs = sorted(
-        longs,
-        key=lambda x: x["score"],
-        reverse=True
-    )[:TOP_LONGS]
-
-    shorts = sorted(
-        shorts,
-        key=lambda x: x["score"],
-        reverse=True
-    )[:TOP_SHORTS]
-
-    print(
-        f"FINAL LONGS: {len(longs)}"
+async def fetch_open_interest(
+    session,
+    symbol
+):
+    url = (
+        f"{BYBIT_BASE}"
+        "/v5/market/open-interest"
+        f"?category=linear"
+        f"&symbol={symbol}"
+        "&intervalTime=5min"
     )
 
-    print(
-        f"FINAL SHORTS: {len(shorts)}"
+    data = await fetch_json(
+        session,
+        url
     )
 
-    return longs, shorts
+    if not data:
+        return 0
+
+    rows = (
+        data
+        .get("result", {})
+        .get("list", [])
+    )
+
+    if not rows:
+        return 0
+
+    try:
+        return float(
+            rows[0]["openInterest"]
+        )
+    except:
+        return 0
