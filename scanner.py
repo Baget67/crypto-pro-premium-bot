@@ -45,14 +45,28 @@ async def fetch_json(
             timeout=15
         ) as response:
 
+            print(
+                f"URL={url} STATUS={response.status}"
+            )
+
+            text = await response.text()
+
+            print(
+                text[:300]
+            )
+
             if response.status != 200:
                 return None
 
             return await response.json()
 
-    except Exception:
-        return None
+    except Exception as e:
 
+        print(
+            f"FETCH ERROR: {e}"
+        )
+
+        return None
 
 # =====================================
 # TICKERS
