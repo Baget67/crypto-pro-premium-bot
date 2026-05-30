@@ -24,10 +24,10 @@ from config import (
 )
 
 # =====================================
-# BINANCE_BASE
+#  BYBIT API
 # =====================================
 
-BINANCE_BASE = "https://fapi.binance.com"
+BYBIT_BASE = "https://api.bybit.com"
 
 
 # =====================================
@@ -76,8 +76,9 @@ async def fetch_tickers(
     session
 ):
     url = (
-        f"{BINANCE_BASE}"
-        "/fapi/v1/ticker/24hr"
+        f"{BYBIT_BASE}"
+        "/v5/market/tickers"
+        "?category=linear"
     )
 
     data = await fetch_json(
@@ -88,7 +89,11 @@ async def fetch_tickers(
     if not data:
         return []
 
-    return data
+    return (
+        data
+        .get("result", {})
+        .get("list", [])
+    )
 
 # =====================================
 # FUNDING
