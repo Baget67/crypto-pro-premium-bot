@@ -27,7 +27,7 @@ from config import (
 # BYBIT API
 # =====================================
 
-BYBIT_BASE = "https://api.bybit.com"
+BINANCE_BASE = "https://fapi.binance.com"
 
 
 # =====================================
