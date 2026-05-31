@@ -405,24 +405,48 @@ async def scan_market(
 
                 continue
 
-    longs = sorted(
-        longs,
-        key=lambda x: x["score"],
-        reverse=True
-    )[:TOP_LONGS]
-
-    shorts = sorted(
-        shorts,
-        key=lambda x: x["score"],
-        reverse=True
-    )[:TOP_SHORTS]
-
-    print(
-        f"FINAL LONGS: {len(longs)}"
-    )
-
-    print(
-        f"FINAL SHORTS: {len(shorts)}"
-    )
-
-    return longs, shorts
+                print(
+                    f"FINAL LONGS: {len(longs)}"
+                )
+            
+                print(
+                    f"FINAL SHORTS: {len(shorts)}"
+                )
+            
+                print("=" * 50)
+                print("TOP LONGS RIGHT NOW")
+            
+                for i, coin in enumerate(
+                    longs,
+                    start=1
+                ):
+            
+                    print(
+                        f"#{i} "
+                        f"{coin['symbol']} "
+                        f"Score={coin['score']} "
+                        f"OI1H={coin['oi_1h']:.2f}% "
+                        f"OI4H={coin['oi_4h']:.2f}% "
+                        f"VOL={coin['volume_change']:.2f}%"
+                    )
+            
+                print("=" * 50)
+                print("TOP SHORTS RIGHT NOW")
+            
+                for i, coin in enumerate(
+                    shorts,
+                    start=1
+                ):
+            
+                    print(
+                        f"#{i} "
+                        f"{coin['symbol']} "
+                        f"Score={coin['score']} "
+                        f"OI1H={coin['oi_1h']:.2f}% "
+                        f"OI4H={coin['oi_4h']:.2f}% "
+                        f"VOL={coin['volume_change']:.2f}%"
+                    )
+            
+                print("=" * 50)
+            
+                return longs, shorts
