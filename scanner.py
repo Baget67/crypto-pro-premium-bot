@@ -417,77 +417,77 @@ async def scan_market(
         reverse=True
     )[:TOP_SHORTS]
 
-print(
-    f"FINAL LONGS: {len(longs)}"
-)
-
-print(
-    f"FINAL SHORTS: {len(shorts)}"
-)
-
-print()
-print("=" * 50)
-print("TOP LONGS RIGHT NOW")
-print()
-
-for i, coin in enumerate(
-    longs,
-    start=1
-):
-
     print(
-        f"#{i} {coin['symbol']}"
+        f"FINAL LONGS: {len(longs)}"
     )
 
     print(
-        f"   Score={coin['score']}"
-    )
-
-    print(
-        f"   OI1H={coin['oi_1h']:.2f}%"
-    )
-
-    print(
-        f"   OI4H={coin['oi_4h']:.2f}%"
-    )
-
-    print(
-        f"   VOL={coin['volume_change']:.2f}%"
+        f"FINAL SHORTS: {len(shorts)}"
     )
 
     print()
-
-print("=" * 50)
-print("TOP SHORTS RIGHT NOW")
-print()
-
-for i, coin in enumerate(
-    shorts,
-    start=1
-):
-
-    print(
-        f"#{i} {coin['symbol']}"
-    )
-
-    print(
-        f"   Score={coin['score']}"
-    )
-
-    print(
-        f"   OI1H={coin['oi_1h']:.2f}%"
-    )
-
-    print(
-        f"   OI4H={coin['oi_4h']:.2f}%"
-    )
-
-    print(
-        f"   VOL={coin['volume_change']:.2f}%"
-    )
-
+    print("=" * 50)
+    print("TOP LONGS RIGHT NOW")
     print()
 
-print("=" * 50)
+    for i, coin in enumerate(
+        longs,
+        start=1
+    ):
 
-return longs, shorts
+        print(
+            f"#{i} {coin['symbol']}"
+        )
+
+        print(
+            f"   Score={coin['score']}"
+        )
+
+        print(
+            f"   OI1H={coin['oi_1h']:.2f}%"
+        )
+
+        print(
+            f"   OI4H={coin['oi_4h']:.2f}%"
+        )
+
+        print(
+            f"   VOL={coin['volume_change']:.2f}%"
+        )
+
+        print()
+
+    print("=" * 50)
+    print("TOP SHORTS RIGHT NOW")
+    print()
+
+    for i, coin in enumerate(
+        shorts,
+        start=1
+    ):
+
+        print(
+            f"#{i} {coin['symbol']}"
+        )
+
+        print(
+            f"   Score={coin['score']}"
+        )
+
+        print(
+            f"   OI1H={coin['oi_1h']:.2f}%"
+        )
+
+        print(
+            f"   OI4H={coin['oi_4h']:.2f}%"
+        )
+
+        print(
+            f"   VOL={coin['volume_change']:.2f}%"
+        )
+
+        print()
+
+    print("=" * 50)
+
+    return longs, shorts
