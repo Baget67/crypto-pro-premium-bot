@@ -11,7 +11,11 @@ from discord.ext import commands, tasks
 
 from history import load_history, save_history
 from scanner import scan_market
-from tracker import save_signal
+from tracker import (
+    save_signal,
+    update_signals
+)
+
 from config import (
     SCAN_INTERVAL_MINUTES,
     LONG_ALERT_SCORE,
@@ -188,6 +192,10 @@ async def market_loop():
         )
 
         longs, shorts = await scan_market(
+            history
+        )
+
+        update_signals(
             history
         )
 
