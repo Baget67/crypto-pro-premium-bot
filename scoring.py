@@ -1,6 +1,6 @@
 # =====================================
 # scoring.py
-# Crypto Pro Premium Bot V2
+# Crypto Pro Premium Bot V3
 # =====================================
 
 def clamp(value, min_value=0, max_value=100):
@@ -16,6 +16,7 @@ def score_long(
     oi_change_4h,
     volume_change,
     price_change,
+    day_change,
     funding_rate,
     trend_score
 ):
@@ -55,7 +56,7 @@ def score_long(
     score += min(40, oi_score)
 
     # -----------------------------
-    # VOLUME (25 points)
+    # VOLUME (25)
     # -----------------------------
 
     if volume_change >= 150:
@@ -71,23 +72,27 @@ def score_long(
         reasons.append(f"Volume +{volume_change:.1f}%")
 
     # -----------------------------
-    # PRICE EXPANSION (15 points)
+    # DAY CHANGE
     # -----------------------------
 
-    if 0 <= price_change <= 5:
+    if 0 <= day_change <= 5:
         score += 15
-        reasons.append("Price still early")
+        reasons.append("Still early")
 
-    elif 5 < price_change <= 10:
+    elif 5 < day_change <= 10:
         score += 8
-        reasons.append("Price moving")
+        reasons.append("Moving")
 
-    elif price_change > 15:
-        score -= 5
-        reasons.append("Already extended")
+    elif 10 < day_change <= 15:
+        score += 3
+        reasons.append("Extended")
+
+    elif day_change > 15:
+        score -= 10
+        reasons.append("Overextended")
 
     # -----------------------------
-    # FUNDING (10 points)
+    # FUNDING
     # -----------------------------
 
     if abs(funding_rate) <= 0.01:
@@ -103,7 +108,7 @@ def score_long(
         reasons.append("Crowded trade")
 
     # -----------------------------
-    # TREND (10 points)
+    # TREND
     # -----------------------------
 
     score += min(10, max(0, trend_score))
@@ -126,6 +131,7 @@ def score_short(
     oi_change_4h,
     volume_change,
     price_change,
+    day_change,
     funding_rate,
     breakdown_score
 ):
@@ -133,7 +139,14 @@ def score_short(
     reasons = []
 
     # -----------------------------
-    # OI (25)
+    # Reject fake shorts
+    # -----------------------------
+
+    if breakdown_score == 0 and price_change >= 0:
+        return 0, []
+
+    # -----------------------------
+    # OI
     # -----------------------------
 
     if oi_change_1h >= 10:
@@ -145,7 +158,7 @@ def score_short(
         reasons.append(f"OI 4H +{oi_change_4h:.1f}%")
 
     # -----------------------------
-    # VOLUME (25)
+    # VOLUME
     # -----------------------------
 
     if volume_change >= 100:
@@ -157,7 +170,7 @@ def score_short(
         reasons.append(f"Volume +{volume_change:.1f}%")
 
     # -----------------------------
-    # FUNDING (25)
+    # FUNDING
     # -----------------------------
 
     if funding_rate >= 0.05:
@@ -169,7 +182,7 @@ def score_short(
         reasons.append("Long bias")
 
     # -----------------------------
-    # BREAKDOWN (25)
+    # BREAKDOWN
     # -----------------------------
 
     score += min(25, breakdown_score)
@@ -178,12 +191,16 @@ def score_short(
         reasons.append("Breakdown detected")
 
     # -----------------------------
-    # PRICE
+    # DAY CHANGE
     # -----------------------------
 
-    if price_change <= -3:
+    if day_change <= -10:
         score += 10
-        reasons.append("Price weakening")
+        reasons.append("Heavy weakness")
+
+    elif day_change <= -5:
+        score += 5
+        reasons.append("Weak day")
 
     return clamp(score), reasons
 
