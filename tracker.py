@@ -18,7 +18,51 @@ def save_signals(signals):
         json.dump(signals, f, indent=2)
 
 
-def save_signal(symbol, direction, score, day_change, entry_price):
+def signal_exists(
+    symbol,
+    direction,
+    cooldown_hours=12
+):
+
+    signals = load_signals()
+
+    now = datetime.utcnow().timestamp()
+
+    cooldown_seconds = (
+        cooldown_hours * 3600
+    )
+
+    for signal in signals:
+
+        if (
+            signal["symbol"] == symbol
+            and signal["direction"] == direction
+        ):
+
+            age = (
+                now - signal["timestamp"]
+            )
+
+            if age < cooldown_seconds:
+                return True
+
+    return False
+
+
+def save_signal(
+    symbol,
+    direction,
+    score,
+    day_change,
+    entry_price
+):
+
+    if signal_exists(
+        symbol,
+        direction
+    ):
+        return
+
     signals = load_signals()
 
     signals.append({
@@ -33,12 +77,18 @@ def save_signal(symbol, direction, score, day_change, entry_price):
         "price_4h": None,
 
         "return_1h": None,
-        "return_4h": None,
-
+        "return_4h": None
     })
 
     save_signals(signals)
-    
+
+    print(
+        f"SIGNAL SAVED: "
+        f"{symbol} "
+        f"{direction}"
+    )
+
+
 def update_signals(history):
 
     signals = load_signals()
@@ -132,4 +182,3 @@ def update_signals(history):
     if updated:
 
         save_signals(signals)
-    
