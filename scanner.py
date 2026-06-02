@@ -266,6 +266,13 @@ async def scan_market(
                     )
                 )
 
+                day_change = float(
+                    ticker.get(
+                        "price24hPcnt",
+                        0
+                    )
+                ) * 100
+
                 if volume_24h < MIN_VOLUME_24H:
                     continue
 
@@ -359,6 +366,7 @@ async def scan_market(
                         oi_4h,
                         volume_change,
                         price_1h,
+                        day_change,
                         funding,
                         trend_score
                     )
@@ -370,6 +378,7 @@ async def scan_market(
                         oi_4h,
                         volume_change,
                         price_1h,
+                        day_change,
                         funding,
                         breakdown_score
                     )
@@ -379,6 +388,7 @@ async def scan_market(
                     "symbol": symbol,
                     "score": long_score,
                     "price": price,
+                    "day_change": day_change,
                     "funding": funding,
                     "oi_1h": oi_1h,
                     "oi_4h": oi_4h,
@@ -390,6 +400,7 @@ async def scan_market(
                     "symbol": symbol,
                     "score": short_score,
                     "price": price,
+                    "day_change": day_change,
                     "funding": funding,
                     "oi_1h": oi_1h,
                     "oi_4h": oi_4h,
@@ -410,6 +421,17 @@ async def scan_market(
         key=lambda x: x["score"],
         reverse=True
     )[:TOP_LONGS]
+
+    long_symbols = {
+        coin["symbol"]
+        for coin in longs
+    }
+
+    shorts = [
+        coin
+        for coin in shorts
+        if coin["symbol"] not in long_symbols
+    ]
 
     shorts = sorted(
         shorts,
@@ -444,6 +466,10 @@ async def scan_market(
         )
 
         print(
+            f"   DAY={coin['day_change']:+.2f}%"
+        )
+
+        print(
             f"   OI1H={coin['oi_1h']:.2f}%"
         )
 
@@ -472,6 +498,10 @@ async def scan_market(
 
         print(
             f"   Score={coin['score']}"
+        )
+
+        print(
+            f"   DAY={coin['day_change']:+.2f}%"
         )
 
         print(
