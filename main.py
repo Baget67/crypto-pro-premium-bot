@@ -10,6 +10,7 @@ from discord.ext import commands, tasks
 
 from history import load_history, save_history
 from scanner import scan_market
+from signal_tracker import track_signal
 
 from config import (
     SCAN_INTERVAL_MINUTES,
@@ -150,6 +151,13 @@ async def market_loop():
                     )
                 )
 
+                track_signal(
+                    coin["symbol"],
+                    "LONG",
+                    coin["score"],
+                    coin["price"]
+                )
+
                 print(
                     f"SENT LONG: "
                     f"{coin['symbol']}"
@@ -168,6 +176,13 @@ async def market_loop():
                     embed=build_short_embed(
                         coin
                     )
+                )
+
+                track_signal(
+                    coin["symbol"],
+                    "SHORT",
+                    coin["score"],
+                    coin["price"]
                 )
 
                 print(
