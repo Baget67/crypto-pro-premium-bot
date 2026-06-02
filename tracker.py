@@ -9,12 +9,12 @@ def load_signals():
     if not os.path.exists(SIGNALS_FILE):
         return []
 
-    with open(SIGNALS_FILE, "r") as f:
+    with open(SIGNALS_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_signals(signals):
-    with open(SIGNALS_FILE, "w") as f:
+    with open(SIGNALS_FILE, "w", encoding="utf-8") as f:
         json.dump(signals, f, indent=2)
 
 
