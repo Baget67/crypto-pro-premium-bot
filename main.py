@@ -5,6 +5,7 @@
 
 import os
 import discord
+from datetime import datetime
 
 from discord.ext import commands, tasks
 
@@ -35,6 +36,7 @@ bot = commands.Bot(
 
 history = load_history()
 
+last_top_report_hour = None
 
 def build_long_embed(coin):
 
@@ -49,6 +51,11 @@ def build_long_embed(coin):
     )
 
     embed.add_field(
+        name="DAY",
+        value=f"{coin['day_change']:+.2f}%"
+    )
+
+    embed.add_field(
         name="OI 1H",
         value=f"{coin['oi_1h']:.2f}%"
     )
@@ -64,7 +71,6 @@ def build_long_embed(coin):
     )
 
     return embed
-
 
 def build_short_embed(coin):
 
@@ -79,6 +85,11 @@ def build_short_embed(coin):
     )
 
     embed.add_field(
+        name="DAY",
+        value=f"{coin['day_change']:+.2f}%"
+    )
+
+    embed.add_field(
         name="OI 1H",
         value=f"{coin['oi_1h']:.2f}%"
     )
@@ -95,6 +106,59 @@ def build_short_embed(coin):
 
     return embed
 
+
+def build_top_longs_embed(longs):
+
+    embed = discord.Embed(
+        title="🔥 TOP LONGS RIGHT NOW",
+        color=0x00ff00
+    )
+
+    for i, coin in enumerate(
+        longs,
+        start=1
+    ):
+
+        embed.add_field(
+            name=f"#{i} {coin['symbol']}",
+            value=(
+                f"Score={coin['score']}\n"
+                f"DAY={coin['day_change']:+.2f}%\n"
+                f"OI1H={coin['oi_1h']:.2f}%\n"
+                f"OI4H={coin['oi_4h']:.2f}%\n"
+                f"VOL={coin['volume_change']:.2f}%"
+            ),
+            inline=False
+        )
+
+    return embed
+
+
+def build_top_shorts_embed(shorts):
+
+    embed = discord.Embed(
+        title="🔻 TOP SHORTS RIGHT NOW",
+        color=0xff0000
+    )
+
+    for i, coin in enumerate(
+        shorts,
+        start=1
+    ):
+
+        embed.add_field(
+            name=f"#{i} {coin['symbol']}",
+            value=(
+                f"Score={coin['score']}\n"
+                f"DAY={coin['day_change']:+.2f}%\n"
+                f"OI1H={coin['oi_1h']:.2f}%\n"
+                f"OI4H={coin['oi_4h']:.2f}%\n"
+                f"VOL={coin['volume_change']:.2f}%"
+            ),
+            inline=False
+        )
+
+    return embed
 
 @tasks.loop(
     minutes=SCAN_INTERVAL_MINUTES
@@ -126,6 +190,33 @@ async def market_loop():
         longs, shorts = await scan_market(
             history
         )
+
+        global last_top_report_hour
+
+        current_hour = (
+            datetime.utcnow().hour
+        )
+
+        if (
+            current_hour
+            != last_top_report_hour
+        ):
+
+            await channel.send(
+                embed=build_top_longs_embed(
+                    longs
+                )
+            )
+
+            await channel.send(
+                embed=build_top_shorts_embed(
+                    shorts
+                )
+            )
+
+            last_top_report_hour = (
+                current_hour
+            )
 
         print(
             f"Longs found: {len(longs)}"
