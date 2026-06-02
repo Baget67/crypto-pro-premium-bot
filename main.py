@@ -241,15 +241,15 @@ async def market_loop():
                 f"score={coin['score']}"
             )
 
-            if coin["score"] >= LONG_ALERT_SCORE:
+            save_signal(
+                symbol=coin["symbol"],
+                direction="LONG",
+                score=coin["score"],
+                day_change=coin["day_change"],
+                entry_price=coin["price"]
+            )
 
-                save_signal(
-                    symbol=coin["symbol"],
-                    direction="LONG",
-                    score=coin["score"],
-                    day_change=coin["day_change"],
-                    entry_price=coin["price"]
-                )
+            if coin["score"] >= LONG_ALERT_SCORE:
 
                 await channel.send(
                     embed=build_long_embed(
@@ -269,15 +269,15 @@ async def market_loop():
                 f"score={coin['score']}"
             )
 
-            if coin["score"] >= SHORT_ALERT_SCORE:
+            save_signal(
+                symbol=coin["symbol"],
+                direction="SHORT",
+                score=coin["score"],
+                day_change=coin["day_change"],
+                entry_price=coin["price"]
+            )
 
-                save_signal(
-                    symbol=coin["symbol"],
-                    direction="SHORT",
-                    score=coin["score"],
-                    day_change=coin["day_change"],
-                    entry_price=coin["price"]
-                )
+            if coin["score"] >= SHORT_ALERT_SCORE:
 
                 await channel.send(
                     embed=build_short_embed(
