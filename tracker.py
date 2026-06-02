@@ -35,8 +35,101 @@ def save_signal(symbol, direction, score, day_change, entry_price):
         "return_1h": None,
         "return_4h": None,
 
-        "status_1h": None,
-        "status_4h": None
     })
 
     save_signals(signals)
+    
+def update_signals(history):
+
+    signals = load_signals()
+
+    now = datetime.utcnow().timestamp()
+
+    updated = False
+
+    for signal in signals:
+
+        symbol = signal["symbol"]
+
+        if symbol not in history:
+            continue
+
+        if not history[symbol]:
+            continue
+
+        current_price = history[symbol][-1]["price"]
+
+        elapsed_minutes = (
+            now - signal["timestamp"]
+        ) / 60
+
+        # ====================
+        # 1 HOUR
+        # ====================
+
+        if (
+            signal["return_1h"] is None
+            and elapsed_minutes >= 60
+        ):
+
+            signal["price_1h"] = current_price
+
+            if signal["direction"] == "LONG":
+
+                signal["return_1h"] = (
+                    (
+                        current_price
+                        - signal["entry_price"]
+                    )
+                    / signal["entry_price"]
+                ) * 100
+
+            else:
+
+                signal["return_1h"] = (
+                    (
+                        signal["entry_price"]
+                        - current_price
+                    )
+                    / signal["entry_price"]
+                ) * 100
+
+            updated = True
+
+        # ====================
+        # 4 HOURS
+        # ====================
+
+        if (
+            signal["return_4h"] is None
+            and elapsed_minutes >= 240
+        ):
+
+            signal["price_4h"] = current_price
+
+            if signal["direction"] == "LONG":
+
+                signal["return_4h"] = (
+                    (
+                        current_price
+                        - signal["entry_price"]
+                    )
+                    / signal["entry_price"]
+                ) * 100
+
+            else:
+
+                signal["return_4h"] = (
+                    (
+                        signal["entry_price"]
+                        - current_price
+                    )
+                    / signal["entry_price"]
+                ) * 100
+
+            updated = True
+
+    if updated:
+
+        save_signals(signals)
+    
