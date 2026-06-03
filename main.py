@@ -138,6 +138,7 @@ def build_top_longs_embed(longs):
             value=(
                 f"Score={coin['score']}\n"
                 f"DAY={coin['day_change']:+.2f}%\n"
+                f"ENTRY={coin['price']:.6f}\n"
                 f"OI1H={coin['oi_1h']:.2f}%\n"
                 f"OI4H={coin['oi_4h']:.2f}%\n"
                 f"VOL={coin['volume_change']:.2f}%"
@@ -165,6 +166,7 @@ def build_top_shorts_embed(shorts):
             value=(
                 f"Score={coin['score']}\n"
                 f"DAY={coin['day_change']:+.2f}%\n"
+                f"ENTRY={coin['price']:.6f}\n"
                 f"OI1H={coin['oi_1h']:.2f}%\n"
                 f"OI4H={coin['oi_4h']:.2f}%\n"
                 f"VOL={coin['volume_change']:.2f}%"
