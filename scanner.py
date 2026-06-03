@@ -45,15 +45,7 @@ async def fetch_json(
             timeout=15
         ) as response:
 
-            print(
-                f"URL={url} STATUS={response.status}"
-            )
-
             text = await response.text()
-
-            print(
-                text[:300]
-            )
 
             if response.status != 200:
                 return None
@@ -237,14 +229,6 @@ async def scan_market(
         tickers = await fetch_tickers(
             session
         )
-
-        print(f"TICKERS RECEIVED: {len(tickers)}")
-
-        for t in tickers[:10]:
-            print(
-                f"{t.get('symbol')} | "
-                f"VOL={t.get('turnover24h')}"
-            )
 
         for ticker in tickers:
 
