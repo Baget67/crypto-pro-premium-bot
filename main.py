@@ -60,6 +60,11 @@ def build_long_embed(coin):
     )
 
     embed.add_field(
+        name="Entry Price",
+        value=f"{coin['price']:.6f}"
+    )
+
+    embed.add_field(
         name="OI 1H",
         value=f"{coin['oi_1h']:.2f}%"
     )
@@ -91,6 +96,11 @@ def build_short_embed(coin):
     embed.add_field(
         name="DAY",
         value=f"{coin['day_change']:+.2f}%"
+    )
+
+    embed.add_field(
+        name="Entry Price",
+        value=f"{coin['price']:.6f}"
     )
 
     embed.add_field(
