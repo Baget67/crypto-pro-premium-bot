@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 
 SIGNALS_FILE = "signals.json"
 
@@ -26,7 +26,7 @@ def signal_exists(
 
     signals = load_signals()
 
-    now = datetime.utcnow().timestamp()
+    now = datetime.now(UTC).timestamp()
 
     cooldown_seconds = (
         cooldown_hours * 3600
@@ -71,8 +71,8 @@ def save_signal(
         "score": score,
         "day_change": day_change,
         "entry_price": entry_price,
-        "timestamp": datetime.utcnow().timestamp(),
-
+        "timestamp": datetime.now(UTC).timestamp(),
+        
         "price_1h": None,
         "price_4h": None,
 
@@ -93,8 +93,8 @@ def update_signals(history):
 
     signals = load_signals()
 
-    now = datetime.utcnow().timestamp()
-
+    now = datetime.now(UTC).timestamp()
+    
     updated = False
 
     for signal in signals:
