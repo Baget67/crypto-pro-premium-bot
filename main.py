@@ -5,7 +5,7 @@
 
 import os
 import discord
-from datetime import datetime
+from datetime import datetime, UTC
 
 from discord.ext import commands, tasks
 
@@ -214,7 +214,7 @@ async def market_loop():
         global last_top_report_hour
 
         current_hour = (
-            datetime.utcnow().hour
+            datetime.now(UTC).hour
         )
 
         if (
